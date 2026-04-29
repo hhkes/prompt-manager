@@ -1,0 +1,14 @@
+/* Reset only - app styles are in App.css */
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+  background: #faf9f7;
+}
+
+::selection {
+  background: #e8ece4;
+  color: #1a1a18;
+}
