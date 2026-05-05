@@ -4,7 +4,7 @@
     {
       "name": "prompt-manager",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": ["run", "start"],
       "port": 5173
     }
   ]
