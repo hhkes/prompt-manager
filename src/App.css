@@ -820,6 +820,93 @@ body {
   letter-spacing: 0.01em;
 }
 
+/* ===== Dashboard ===== */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.dashboard-section-title {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-recent {
+  display: grid;
+  gap: 0;
+}
+
+.dashboard-recent-item {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.dashboard-recent-item:first-child {
+  border-top: 1px solid var(--border);
+}
+
+.dashboard-recent-item:hover .dashboard-recent-title {
+  color: var(--sage);
+}
+
+.dashboard-recent-title {
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--text);
+  transition: color 0.15s;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-folders {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.dashboard-folder-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dashboard-folder-item:hover {
+  border-color: var(--sage);
+  background: var(--sage-muted);
+}
+
+.dashboard-folder-name {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-folder-count {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+
 /* ===== Export/Import ===== */
 .export-import {
   display: flex;

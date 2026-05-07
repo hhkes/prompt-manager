@@ -3,19 +3,27 @@ import { generatePrompt } from '../utils/api';
 
 export default function AIGenerator({ onSave, onClose }) {
   const [description, setDescription] = useState('');
-  const [result, setResult] = useState('');
+  const [title, setTitle] = useState('');
+  const [promptDesc, setPromptDesc] = useState('');
+  const [promptText, setPromptText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const hasResult = title || promptText;
 
   async function handleGenerate() {
     if (!description.trim()) return;
     setLoading(true);
     setError('');
-    setResult('');
+    setTitle('');
+    setPromptDesc('');
+    setPromptText('');
 
     try {
-      const prompt = await generatePrompt(description.trim());
-      setResult(prompt);
+      const result = await generatePrompt(description.trim());
+      setTitle(result.title || '');
+      setPromptDesc(result.description || '');
+      setPromptText(result.prompt || '');
     } catch (err) {
       setError(err.message || 'Failed to generate prompt');
     } finally {
@@ -24,16 +32,14 @@ export default function AIGenerator({ onSave, onClose }) {
   }
 
   function handleSave() {
-    if (!result) return;
+    if (!promptText) return;
     onSave({
-      title: description.slice(0, 60) + (description.length > 60 ? '...' : ''),
+      title: title || description.slice(0, 60),
       category: 'AI Generated',
       tags: ['ai-generated'],
-      text: result,
-      notes: `Generated from: "${description}"`,
+      text: promptText,
+      notes: promptDesc || `Generated from: "${description}"`,
     });
-    setDescription('');
-    setResult('');
   }
 
   return (
@@ -45,7 +51,7 @@ export default function AIGenerator({ onSave, onClose }) {
         <label>
           What do you need a prompt for?
           <textarea
-            rows={4}
+            rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="e.g. I need a prompt that helps me write professional emails to clients about project delays..."
@@ -62,24 +68,47 @@ export default function AIGenerator({ onSave, onClose }) {
 
         {error && <div className="error-msg">{error}</div>}
 
-        {result && (
+        {hasResult && (
           <div className="ai-result">
             <label>
-              Generated Prompt (edit if needed):
-              <textarea
-                rows={8}
-                value={result}
-                onChange={(e) => setResult(e.target.value)}
+              Prompt Name
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Short title for this prompt"
               />
             </label>
+
+            <label>
+              When to use
+              <input
+                type="text"
+                value={promptDesc}
+                onChange={(e) => setPromptDesc(e.target.value)}
+                placeholder="When / why to use this prompt"
+              />
+            </label>
+
+            <label>
+              Prompt Text
+              <textarea
+                rows={8}
+                value={promptText}
+                onChange={(e) => setPromptText(e.target.value)}
+              />
+            </label>
+
             <div className="form-actions">
-              <button onClick={handleSave} className="btn btn-primary">Save to Library</button>
+              <button onClick={handleSave} className="btn btn-primary" disabled={!promptText}>
+                Save to Library
+              </button>
               <button onClick={onClose} className="btn">Discard</button>
             </div>
           </div>
         )}
 
-        {!result && (
+        {!hasResult && (
           <div className="form-actions" style={{ marginTop: '1rem' }}>
             <button onClick={onClose} className="btn">Close</button>
           </div>

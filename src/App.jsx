@@ -6,6 +6,7 @@ import PromptView from './components/PromptView';
 import AIGenerator from './components/AIGenerator';
 import ExportImport from './components/ExportImport';
 import FolderSidebar from './components/FolderSidebar';
+import Dashboard from './components/Dashboard';
 import {
   getPrompts,
   savePrompt,
@@ -90,18 +91,17 @@ export default function App() {
   }, [prompts, search, categoryFilter, folderFilter, mappings]);
 
   function handleSave(data) {
-    let promptId = data.id;
-    if (promptId) {
-      updatePrompt(promptId, data);
+    let saved;
+    if (data.id) {
+      saved = updatePrompt(data.id, data);
     } else {
-      const created = savePrompt(data);
-      promptId = created.id;
+      saved = savePrompt(data);
     }
-    // Save folder assignments
-    setPromptFolders(promptId, data.folderIds || []);
+    setPromptFolders(saved.id, data.folderIds || []);
     refresh();
     setShowForm(false);
     setEditingPrompt(null);
+    if (!data.id) setViewingPrompt(saved);
   }
 
   function handleEdit(prompt) {
@@ -121,6 +121,7 @@ export default function App() {
     setPromptFolders(created.id, data.folderIds || []);
     refresh();
     setShowAI(false);
+    setViewingPrompt(created);
   }
 
   function handleImport(count) {
@@ -190,30 +191,40 @@ export default function App() {
         />
 
         <main className="app-main">
-          <SearchBar
-            onSearch={setSearch}
-            categories={categories}
-            selectedCategory={categoryFilter}
-            onCategoryChange={setCategoryFilter}
-          />
-
-          <div className="prompt-count">
-            {filtered.length} prompt{filtered.length !== 1 ? 's' : ''}
-            {folderFilter && folders.find((f) => f.id === folderFilter)
-              ? ` in ${folders.find((f) => f.id === folderFilter).name}`
-              : ''}
-          </div>
-
-          <PromptList
-            prompts={filtered}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onView={handleView}
-            folders={folders}
-            promptFolderMap={promptFolderMap}
-            onAddToFolder={handleAddToFolder}
-            onRemoveFromFolder={handleRemoveFromFolder}
-          />
+          {!search && !categoryFilter && !folderFilter ? (
+            <Dashboard
+              prompts={prompts}
+              folders={folders}
+              mappings={mappings}
+              onSelectFolder={(id) => setFolderFilter(id)}
+              onView={handleView}
+            />
+          ) : (
+            <>
+              <SearchBar
+                onSearch={setSearch}
+                categories={categories}
+                selectedCategory={categoryFilter}
+                onCategoryChange={setCategoryFilter}
+              />
+              <div className="prompt-count">
+                {filtered.length} prompt{filtered.length !== 1 ? 's' : ''}
+                {folderFilter && folders.find((f) => f.id === folderFilter)
+                  ? ` in ${folders.find((f) => f.id === folderFilter).name}`
+                  : ''}
+              </div>
+              <PromptList
+                prompts={filtered}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                folders={folders}
+                promptFolderMap={promptFolderMap}
+                onAddToFolder={handleAddToFolder}
+                onRemoveFromFolder={handleRemoveFromFolder}
+              />
+            </>
+          )}
         </main>
       </div>
 
@@ -238,6 +249,8 @@ export default function App() {
           folderIds={promptFolderMap.get(viewingPrompt.id) || []}
           onClose={() => setViewingPrompt(null)}
           onEdit={handleEdit}
+          onAddToFolder={handleAddToFolder}
+          onRemoveFromFolder={handleRemoveFromFolder}
         />
       )}
     </div>

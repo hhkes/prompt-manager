@@ -10,6 +10,5 @@ export async function generatePrompt(description) {
     throw new Error(err || 'Failed to generate prompt');
   }
 
-  const data = await response.json();
-  return data.prompt;
+  return response.json(); // { title, description, prompt }
 }
