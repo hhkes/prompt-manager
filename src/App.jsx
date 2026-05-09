@@ -7,6 +7,7 @@ import AIGenerator from './components/AIGenerator';
 import ExportImport from './components/ExportImport';
 import FolderSidebar from './components/FolderSidebar';
 import Dashboard from './components/Dashboard';
+import DocImport from './components/DocImport';
 import {
   getPrompts,
   savePrompt,
@@ -133,6 +134,40 @@ export default function App() {
     }
   }
 
+  function handleDocImport(parsedPrompts) {
+    const currentFolders = getFolders();
+    const folderNameToId = new Map(currentFolders.map((f) => [f.name.toLowerCase(), f.id]));
+
+    for (const p of parsedPrompts) {
+      let folderId = null;
+      if (p.folder) {
+        const key = p.folder.toLowerCase();
+        if (folderNameToId.has(key)) {
+          folderId = folderNameToId.get(key);
+        } else {
+          const created = saveFolder(p.folder);
+          folderNameToId.set(key, created.id);
+          folderId = created.id;
+        }
+      }
+
+      const saved = savePrompt({
+        title: p.name,
+        category: p.folder || '',
+        tags: [],
+        text: p.prompt,
+        notes: p.description,
+      });
+
+      if (folderId) {
+        addPromptToFolder(saved.id, folderId);
+      }
+    }
+
+    refresh();
+    alert(`Imported ${parsedPrompts.length} prompt${parsedPrompts.length !== 1 ? 's' : ''} from document.`);
+  }
+
   // Folder handlers
   function handleCreateFolder(name) {
     saveFolder(name);
@@ -176,6 +211,7 @@ export default function App() {
             AI Generate
           </button>
           <ExportImport onImport={handleImport} />
+          <DocImport onImport={handleDocImport} folders={folders} onCreateFolder={handleCreateFolder} />
         </div>
       </header>
 

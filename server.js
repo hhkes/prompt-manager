@@ -53,8 +53,66 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  res.writeHead(404);
-  res.end('Not found');
+  if (req.method === 'POST' && req.url === '/api/parse-document') {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const body = Buffer.concat(chunks).toString();
+
+    try {
+      const { text } = JSON.parse(body);
+
+      if (!text) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'text is required' }));
+        return;
+      }
+
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4096,
+        messages: [
+          {
+            role: 'user',
+            content: `You are analysing a document that contains one or more AI prompts. Each prompt may be for a different use case or department.
+
+Document content:
+---
+${text}
+---
+
+Extract every distinct prompt from this document. For each one return:
+- name: a short title (5 words or less)
+- description: one sentence explaining when to use it
+- prompt: the full cleaned-up prompt text
+- folder: a folder name grouping similar prompts (e.g. "Marketing", "Sales", "Customer Service", "Writing", "Analysis", "HR", "Legal")
+
+Return ONLY a valid JSON array, no other text:
+[
+  {
+    "name": "...",
+    "description": "...",
+    "prompt": "...",
+    "folder": "..."
+  }
+]`,
+          },
+        ],
+      });
+
+      const raw = message.content[0].text.trim();
+      const jsonMatch = raw.match(/\[[\s\S]*\]/);
+      const prompts = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ prompts }));
+    } catch (err) {
+      console.error('parse-document error:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message || 'Internal server error' }));
+    }
+    return;
+  }
+
+
 });
 
 const PORT = 3001;
