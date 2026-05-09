@@ -8,6 +8,8 @@ import ExportImport from './components/ExportImport';
 import FolderSidebar from './components/FolderSidebar';
 import Dashboard from './components/Dashboard';
 import DocImport from './components/DocImport';
+import ApiKeyModal from './components/ApiKeyModal';
+import { hasApiKey } from './utils/anthropicClient';
 import {
   getPrompts,
   savePrompt,
@@ -37,6 +39,7 @@ export default function App() {
   const [editingPrompt, setEditingPrompt] = useState(null);
   const [showAI, setShowAI] = useState(false);
   const [viewingPrompt, setViewingPrompt] = useState(null);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   function refresh() {
     setPrompts(getPrompts());
@@ -194,6 +197,14 @@ export default function App() {
     setViewingPrompt(prompt);
   }
 
+  function handleNeedApiKey() {
+    setShowApiKeyModal(true);
+  }
+
+  function handleApiKeySaved() {
+    setShowApiKeyModal(false);
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -202,11 +213,21 @@ export default function App() {
           <button className="btn btn-primary" onClick={() => { setEditingPrompt(null); setShowForm(true); }}>
             New Prompt
           </button>
-          <button className="btn btn-accent" onClick={() => setShowAI(true)}>
+          <button className="btn btn-accent" onClick={() => {
+            if (!hasApiKey()) { setShowApiKeyModal(true); return; }
+            setShowAI(true);
+          }}>
             AI Generate
           </button>
           <ExportImport onImport={handleImport} />
-          <DocImport onImport={handleDocImport} folders={folders} onCreateFolder={handleCreateFolder} />
+          <DocImport onImport={handleDocImport} onNeedApiKey={handleNeedApiKey} />
+          <button
+            className="btn btn-sm"
+            title={hasApiKey() ? 'Update API key' : 'Set API key'}
+            onClick={() => setShowApiKeyModal(true)}
+          >
+            {hasApiKey() ? '🔑' : '⚠️ API Key'}
+          </button>
         </div>
       </header>
 
@@ -270,7 +291,11 @@ export default function App() {
       )}
 
       {showAI && (
-        <AIGenerator onSave={handleAISave} onClose={() => setShowAI(false)} />
+        <AIGenerator
+          onSave={handleAISave}
+          onClose={() => setShowAI(false)}
+          onNeedApiKey={handleNeedApiKey}
+        />
       )}
 
       {viewingPrompt && (
@@ -282,6 +307,13 @@ export default function App() {
           onEdit={handleEdit}
           onAddToFolder={handleAddToFolder}
           onRemoveFromFolder={handleRemoveFromFolder}
+        />
+      )}
+
+      {showApiKeyModal && (
+        <ApiKeyModal
+          onSave={handleApiKeySaved}
+          onCancel={() => setShowApiKeyModal(false)}
         />
       )}
     </div>

@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import mammoth from 'mammoth';
+import { parseDocument } from '../utils/api';
 
-export default function DocImport({ onImport, folders, onCreateFolder }) {
+export default function DocImport({ onImport, onNeedApiKey }) {
   const inputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,22 +20,14 @@ export default function DocImport({ onImport, folders, onCreateFolder }) {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const { value: text } = await mammoth.extractRawText({ arrayBuffer });
-
-      const response = await fetch('/api/parse-document', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!response.ok) {
-        const err = await response.text();
-        throw new Error(err || 'Failed to parse document');
-      }
-
-      const { prompts } = await response.json();
+      const prompts = await parseDocument(text);
       setPreview(prompts);
     } catch (err) {
-      setError(err.message || 'Failed to process document');
+      if (err.message === 'NO_API_KEY') {
+        onNeedApiKey();
+      } else {
+        setError(err.message || 'Failed to process document');
+      }
     } finally {
       setLoading(false);
     }

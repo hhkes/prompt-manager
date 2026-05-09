@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { generatePrompt } from '../utils/api';
 
-export default function AIGenerator({ onSave, onClose }) {
+export default function AIGenerator({ onSave, onClose, onNeedApiKey }) {
   const [description, setDescription] = useState('');
   const [title, setTitle] = useState('');
   const [promptDesc, setPromptDesc] = useState('');
@@ -25,7 +25,12 @@ export default function AIGenerator({ onSave, onClose }) {
       setPromptDesc(result.description || '');
       setPromptText(result.prompt || '');
     } catch (err) {
-      setError(err.message || 'Failed to generate prompt');
+      if (err.message === 'NO_API_KEY') {
+        onClose();
+        if (typeof onNeedApiKey === 'function') onNeedApiKey();
+      } else {
+        setError(err.message || 'Failed to generate prompt');
+      }
     } finally {
       setLoading(false);
     }
